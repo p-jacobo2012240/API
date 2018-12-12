@@ -46,61 +46,55 @@ app.get('/', async(req, res, next) =>{
 })
 
 
-//=============================
-//Actualizar Un Usuario
-//=============================
-app.put('/:id', mdAuth.verificaToken ,(req, res) => {
+app.put('/:id', mdAuth.verificaToken, async(req, res) => {
     
-        var id = req.params.id;
-        var body = req.body;                     //Lo que sea que venga del cuerpo  
+    let id = req.params.id
+    let body = req.body                   
+    let result
+
+    try {
+    result = await Usuario.findById(id, (err, usuario) => { 
+        if (err) {
+            return res.status(500).json({
+                ok: false,
+                mensaje: 'Error al buscar usuario',
+                errors: err
+            })
+        }
     
-        Usuario.findById(id, (err, usuario) => { //Devolviendo un suario o error
-    
-    
+        if (!usuario) {
+            return res.status(400).json({
+                ok: false,
+                mensaje: 'El usuario con el id ' + id + ' no existe',
+                errors: { message: 'No existe un usuario con ese ID' }
+            })
+        }
+
+        usuario.nombre = body.nombre;
+        usuario.email = body.email;
+        usuario.role = body.role;
+        
+        usuario.save((err, usuarioGuardado) => {
             if (err) {
-                return res.status(500).json({
-                    ok: false,
-                    mensaje: 'Error al buscar usuario',
-                    errors: err
-                });
-            }
-    
-            if (!usuario) {
                 return res.status(400).json({
                     ok: false,
-                    mensaje: 'El usuario con el id ' + id + ' no existe',
-                    errors: { message: 'No existe un usuario con ese ID' }
-                });
+                    mensaje: 'Error al actualizar usuario',
+                    errors: err
+                })
             }
-    
-    
-            usuario.nombre = body.nombre;
-            usuario.email = body.email;
-            usuario.role = body.role;
-    
-            usuario.save((err, usuarioGuardado) => {
-    
-                if (err) {
-                    return res.status(400).json({
-                        ok: false,
-                        mensaje: 'Error al actualizar usuario',
-                        errors: err
-                    });
-                }
 
-                usuarioGuardado.password = ':)..';
-    
-                    
-                res.status(200).json({
-                    ok: true,
-                    usuario: usuarioGuardado
-                });
-    
-            });
-    
-        });
-    
-    });
+            usuarioGuardado.password = 'HCK';
+            res.status(200).json({
+                ok: true,
+                usuario: usuarioGuardado
+            })
+        })
+    })
+
+    } catch (e) {
+        return  console.log(e);
+    }
+})
 
 
 app.post('/', async(req, res) =>{ 
